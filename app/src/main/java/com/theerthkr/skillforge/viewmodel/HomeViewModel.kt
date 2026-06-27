@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import java.io.IOException
 
 class HomeViewModel(
-    private val repository: SkillforgeRepository = SkillforgeRepository()
+    private val repository: SkillforgeRepository = SkillforgeRepository.instance
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState<List<Category>>>(UiState.Loading)

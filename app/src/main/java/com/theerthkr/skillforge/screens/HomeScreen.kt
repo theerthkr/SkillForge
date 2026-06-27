@@ -6,11 +6,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -19,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -58,6 +61,7 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(CreamBackground)
+            .statusBarsPadding()
     ) {
         when (val s = state) {
             is UiState.Loading -> LoadingState()
@@ -77,8 +81,14 @@ private fun HomeContent(
 ) {
     var query by remember { mutableStateOf("") }
 
-    val allCourses: List<Course> = remember(categories) {
-        categories.flatMap { it.courses }
+    val filteredCourses: List<Course> = remember(categories, query) {
+        val all = categories.flatMap { it.courses }
+        if (query.isBlank()) all
+        else all.filter {
+            it.title.contains(query, ignoreCase = true) ||
+            it.instructor?.name?.contains(query, ignoreCase = true) == true ||
+            it.level.contains(query, ignoreCase = true)
+        }
     }
 
     LazyColumn(
@@ -108,12 +118,12 @@ private fun HomeContent(
             }
         }
         item {
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
         }
         item {
             SectionHeader(title = "Popular courses")
         }
-        items(allCourses, key = { it.id }) { course ->
+        items(filteredCourses, key = { it.id }) { course ->
             Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)) {
                 CourseCard(
                     course = course,
@@ -161,18 +171,18 @@ private fun HomeHeader() {
                     )
                 }
             }
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(10.dp))
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .background(DarkTealPrimary, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "AS",
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
+                Icon(
+                    imageVector = Icons.Filled.Person,
+                    contentDescription = "Profile",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }

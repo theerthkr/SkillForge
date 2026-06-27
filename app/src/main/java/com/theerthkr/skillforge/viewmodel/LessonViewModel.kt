@@ -13,13 +13,14 @@ import java.io.IOException
 
 data class LessonScreenData(
     val course: Course,
-    val currentLesson: Lesson
+    val currentLesson: Lesson,
+    val isUnlocked: Boolean
 )
 
 class LessonViewModel(
     private val courseId: String,
     initialLessonId: String,
-    private val repository: SkillforgeRepository = SkillforgeRepository()
+    private val repository: SkillforgeRepository = SkillforgeRepository.instance
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState<LessonScreenData>>(UiState.Loading)
@@ -31,7 +32,13 @@ class LessonViewModel(
 
     /** Lets the user tap another lesson in the list without leaving the screen. */
     fun selectLesson(lessonId: String) {
-        loadLesson(lessonId)
+        val current = (_uiState.value as? UiState.Success)?.data
+        val newLesson = current?.course?.lessons?.firstOrNull { it.id == lessonId }
+        if (current != null && newLesson != null) {
+            _uiState.value = UiState.Success(current.copy(currentLesson = newLesson))
+        } else {
+            loadLesson(lessonId)
+        }
     }
 
     private fun loadLesson(lessonId: String) {
@@ -41,7 +48,8 @@ class LessonViewModel(
                 val course = repository.getCourseById(courseId)
                 val lesson = course?.lessons?.firstOrNull { it.id == lessonId }
                 if (course != null && lesson != null) {
-                    UiState.Success(LessonScreenData(course, lesson))
+                    val isUnlocked = repository.isCourseUnlocked(courseId)
+                    UiState.Success(LessonScreenData(course, lesson, isUnlocked))
                 } else {
                     UiState.Error("Couldn't find that lesson.")
                 }
