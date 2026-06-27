@@ -80,11 +80,17 @@ private fun HomeContent(
     onCourseClick: (String) -> Unit
 ) {
     var query by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf<String?>(null) }
 
-    val filteredCourses: List<Course> = remember(categories, query) {
-        val all = categories.flatMap { it.courses }
-        if (query.isBlank()) all
-        else all.filter {
+    val filteredCourses: List<Course> = remember(categories, query, selectedCategory) {
+        val baseCourses = if (selectedCategory == null) {
+            categories.flatMap { it.courses }
+        } else {
+            categories.find { it.name == selectedCategory }?.courses ?: emptyList()
+        }
+        
+        if (query.isBlank()) baseCourses
+        else baseCourses.filter {
             it.title.contains(query, ignoreCase = true) ||
             it.instructor?.name?.contains(query, ignoreCase = true) == true ||
             it.level.contains(query, ignoreCase = true)
@@ -112,7 +118,10 @@ private fun HomeContent(
                 items(categories, key = { it.id }) { category ->
                     CategoryCard(
                         category = category,
-                        onClick = { /* category browsing not in scope for this build */ }
+                        isSelected = category.name == selectedCategory,
+                        onClick = { 
+                            selectedCategory = if (selectedCategory == category.name) null else category.name 
+                        }
                     )
                 }
             }
