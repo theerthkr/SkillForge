@@ -1,0 +1,78 @@
+package com.theerthkr.skillforge.screens.home
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.theerthkr.skillforge.data.model.Category
+
+@Composable
+fun CategoryCard(
+    category: Category,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val accentColor = remember(category.iconColor) {
+        runCatching { Color(android.graphics.Color.parseColor(category.iconColor)) }
+            .getOrDefault(Color(0xFF2DD4BF))
+    }
+
+    Card(
+        modifier = modifier
+            .width(150.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(
+                        color = accentColor.copy(alpha = 0.18f),
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Code,
+                    contentDescription = null,
+                    tint = accentColor,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = category.name,
+                style = MaterialTheme.typography.titleSmall,
+                color = Color(0xFF1A1A1A),
+                maxLines = 2
+            )
+            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "${category.courseCount} courses",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF8A8A8A)
+            )
+        }
+    }
+}
