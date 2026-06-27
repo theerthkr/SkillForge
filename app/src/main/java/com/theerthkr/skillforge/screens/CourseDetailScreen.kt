@@ -206,7 +206,7 @@ private fun CourseDetailContent(
             }
         }
 
-        val isCourseFree = course.lessons.all { it.isFree } || course.price() == 0.0
+        val isCourseFree = course.lessons.all { it.isFree }
         if (!data.isUnlocked) {
             PriceFooter(
                 modifier = Modifier.align(Alignment.BottomCenter),
@@ -223,9 +223,7 @@ private fun CourseDetailContent(
     }
 }
 
-// The API doesn't return a price field — the mock shows "Free" for this course,
-// so we treat courses as free unless/until a real price field exists.
-private fun Course.price(): Double = 0.0
+
 
 private fun formatStudentCount(count: Int): String {
     return if (count >= 1000) {

@@ -87,6 +87,14 @@ class SkillforgeRepository(
         return prefs?.getBoolean("unlocked_$courseId", false) ?: false
     }
 
+    fun saveNote(courseId: String, lessonId: String, note: String) {
+        prefs?.edit()?.putString("note_${courseId}_$lessonId", note)?.apply()
+    }
+
+    fun getNote(courseId: String, lessonId: String): String {
+        return prefs?.getString("note_${courseId}_$lessonId", "") ?: ""
+    }
+
     suspend fun getCourseById(courseId: String): Course? {
         val categories = getCategories()
         return categories.flatMap { it.courses }.firstOrNull { it.id == courseId }
