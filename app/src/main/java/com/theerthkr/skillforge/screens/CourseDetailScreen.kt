@@ -206,7 +206,7 @@ private fun CourseDetailContent(
             }
         }
 
-        val isCourseFree = course.lessons.all { it.isFree }
+        val isCourseFree = course.lessons.any { it.isFree }
         if (!data.isUnlocked) {
             PriceFooter(
                 modifier = Modifier.align(Alignment.BottomCenter),
