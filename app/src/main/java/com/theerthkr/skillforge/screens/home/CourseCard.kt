@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -66,11 +68,11 @@ fun CourseCard(
                     model = course.thumbnailUrl,
                     contentDescription = course.title,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxWidth().height(64.dp)
+                    modifier = Modifier.fillMaxSize()
                 )
             }
 
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(14.dp))
+            Spacer(modifier = Modifier.width(14.dp))
 
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
@@ -79,20 +81,20 @@ fun CourseCard(
                     color = levelColor,
                     fontWeight = FontWeight.Bold
                 )
-                androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = course.title,
                     style = MaterialTheme.typography.titleMedium,
                     color = Color(0xFF1A1A1A),
                     maxLines = 1
                 )
-                androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = course.instructor?.name ?: "",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFF8A8A8A)
                 )
-                androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Filled.Star,
@@ -100,20 +102,20 @@ fun CourseCard(
                         tint = Color(0xFFF59E0B),
                         modifier = Modifier.size(14.dp)
                     )
-                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "${course.rating}",
                         style = MaterialTheme.typography.labelMedium,
                         color = Color(0xFF1A1A1A)
                     )
-                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
                     Icon(
                         imageVector = Icons.Filled.Schedule,
                         contentDescription = null,
                         tint = Color(0xFF8A8A8A),
                         modifier = Modifier.size(14.dp)
                     )
-                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = formatDuration(course.durationHours),
                         style = MaterialTheme.typography.labelMedium,

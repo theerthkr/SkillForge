@@ -7,11 +7,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -48,6 +50,7 @@ import com.theerthkr.skillforge.screens.coursedetail.LessonListItem
 import com.theerthkr.skillforge.screens.home.formatDuration
 import com.theerthkr.skillforge.ui.theme.CreamBackground
 import com.theerthkr.skillforge.ui.theme.DarkTealPrimary
+import com.theerthkr.skillforge.viewmodel.CourseDetailScreenData
 import com.theerthkr.skillforge.viewmodel.CourseDetailViewModel
 import com.theerthkr.skillforge.viewmodel.UiState
 
@@ -55,6 +58,7 @@ import com.theerthkr.skillforge.viewmodel.UiState
 fun CourseDetailScreen(
     courseId: String,
     onLessonClick: (String) -> Unit,
+    onEnrollClick: (String) -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
     val viewModel: CourseDetailViewModel = viewModel(
@@ -77,8 +81,9 @@ fun CourseDetailScreen(
             is UiState.Loading -> LoadingState()
             is UiState.Error -> ErrorState(message = s.message, onRetry = viewModel::loadCourse)
             is UiState.Success -> CourseDetailContent(
-                course = s.data,
+                data = s.data,
                 onLessonClick = onLessonClick,
+                onEnrollClick = onEnrollClick,
                 onBackClick = onBackClick
             )
         }
@@ -87,10 +92,12 @@ fun CourseDetailScreen(
 
 @Composable
 private fun CourseDetailContent(
-    course: Course,
+    data: CourseDetailScreenData,
     onLessonClick: (String) -> Unit,
+    onEnrollClick: (String) -> Unit,
     onBackClick: () -> Unit
 ) {
+    val course = data.course
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -99,20 +106,20 @@ private fun CourseDetailContent(
             item { HeroSection(course = course, onBackClick = onBackClick) }
             item {
                 Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = course.title,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF1A1A1A)
                     )
-                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = course.subtitle,
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color(0xFF8A8A8A)
                     )
-                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
@@ -121,28 +128,28 @@ private fun CourseDetailContent(
                             tint = Color(0xFFF59E0B),
                             modifier = Modifier.size(16.dp)
                         )
-                        androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text("${course.rating}", style = MaterialTheme.typography.labelLarge, color = Color(0xFF1A1A1A))
-                        androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
                         Text(
                             text = formatStudentCount(course.studentsEnrolled),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFF8A8A8A)
                         )
-                        androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
                         Icon(
                             imageVector = Icons.Filled.Schedule,
                             contentDescription = null,
                             tint = Color(0xFF8A8A8A),
                             modifier = Modifier.size(14.dp)
                         )
-                        androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = formatDuration(course.durationHours),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFF8A8A8A)
                         )
-                        androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
                         Text(
                             text = course.level,
                             style = MaterialTheme.typography.labelLarge,
@@ -151,17 +158,17 @@ private fun CourseDetailContent(
                         )
                     }
 
-                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     InstructorCard(course = course)
 
-                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = course.description,
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color(0xFF4A4A4A)
                     )
 
-                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -179,7 +186,7 @@ private fun CourseDetailContent(
                             color = Color(0xFF8A8A8A)
                         )
                     }
-                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
             itemsIndexed(course.lessons) { index, lesson ->
@@ -187,16 +194,32 @@ private fun CourseDetailContent(
                     LessonListItem(
                         lesson = lesson,
                         index = index,
-                        onClick = { onLessonClick(lesson.id) }
+                        onClick = { 
+                            if (lesson.isFree || data.isUnlocked) {
+                                onLessonClick(lesson.id) 
+                            } else {
+                                onEnrollClick(course.id)
+                            }
+                        }
                     )
                 }
             }
         }
 
-        PriceFooter(
-            modifier = Modifier.align(Alignment.BottomCenter),
-            isFree = course.lessons.all { it.isFree } || course.price() == 0.0
-        )
+        val isCourseFree = course.lessons.all { it.isFree } || course.price() == 0.0
+        if (!data.isUnlocked) {
+            PriceFooter(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                isFree = isCourseFree,
+                onEnrollClick = {
+                    if (isCourseFree) {
+                        course.lessons.firstOrNull()?.id?.let { onLessonClick(it) }
+                    } else {
+                        onEnrollClick(course.id)
+                    }
+                }
+            )
+        }
     }
 }
 
@@ -231,14 +254,14 @@ private fun HeroSection(course: Course, onBackClick: () -> Unit) {
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, CreamBackground),
-                        startY = 0f
+                        colors = listOf(Color.Transparent, CreamBackground)
                     )
                 )
         )
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .statusBarsPadding()
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -249,7 +272,7 @@ private fun HeroSection(course: Course, onBackClick: () -> Unit) {
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(start = 16.dp, end = 16.dp, bottom = 48.dp)
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 course.tags.forEach { tag ->
@@ -267,20 +290,6 @@ private fun HeroSection(course: Course, onBackClick: () -> Unit) {
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun CircleIconButton(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .size(40.dp)
-            .background(Color.White.copy(alpha = 0.9f), CircleShape),
-        contentAlignment = Alignment.Center
-    ) {
-        IconButton(onClick = onClick) {
-            Icon(imageVector = icon, contentDescription = null, tint = Color(0xFF1A1A1A))
         }
     }
 }
@@ -321,7 +330,7 @@ private fun InstructorCard(course: Course) {
                     )
                 }
             }
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = instructor?.name ?: "",
@@ -347,7 +356,7 @@ private fun InstructorCard(course: Course) {
 }
 
 @Composable
-private fun PriceFooter(isFree: Boolean, modifier: Modifier = Modifier) {
+private fun PriceFooter(isFree: Boolean, onEnrollClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         color = CreamBackground,
         modifier = modifier.fillMaxWidth()
@@ -373,7 +382,7 @@ private fun PriceFooter(isFree: Boolean, modifier: Modifier = Modifier) {
                 )
             }
             Button(
-                onClick = { /* enrollment not in scope */ },
+                onClick = onEnrollClick,
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = DarkTealPrimary),
                 modifier = Modifier.height(52.dp)

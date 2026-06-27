@@ -10,13 +10,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
 
+data class CourseDetailScreenData(val course: Course, val isUnlocked: Boolean)
+
 class CourseDetailViewModel(
     private val courseId: String,
-    private val repository: SkillforgeRepository = SkillforgeRepository()
+    private val repository: SkillforgeRepository = SkillforgeRepository.instance
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<UiState<Course>>(UiState.Loading)
-    val uiState: StateFlow<UiState<Course>> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow<UiState<CourseDetailScreenData>>(UiState.Loading)
+    val uiState: StateFlow<UiState<CourseDetailScreenData>> = _uiState.asStateFlow()
 
     init {
         loadCourse()
@@ -28,7 +30,8 @@ class CourseDetailViewModel(
             _uiState.value = try {
                 val course = repository.getCourseById(courseId)
                 if (course != null) {
-                    UiState.Success(course)
+                    val isUnlocked = repository.isCourseUnlocked(courseId)
+                    UiState.Success(CourseDetailScreenData(course, isUnlocked))
                 } else {
                     UiState.Error("Couldn't find that course.")
                 }

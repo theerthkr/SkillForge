@@ -7,11 +7,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -28,12 +30,14 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -54,7 +58,8 @@ import com.theerthkr.skillforge.viewmodel.UiState
 fun LessonScreen(
     courseId: String,
     lessonId: String,
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onEnrollClick: (String) -> Unit = {}
 ) {
     val viewModel: LessonViewModel = viewModel(
         key = "lesson_${courseId}_$lessonId",
@@ -78,22 +83,20 @@ fun LessonScreen(
             is UiState.Success -> LessonContent(
                 data = s.data,
                 onBackClick = onBackClick,
+                onEnrollClick = onEnrollClick,
                 onLessonSelected = viewModel::selectLesson
             )
         }
     }
 }
 
-private enum class LessonTab { LESSONS, NOTES, RESOURCES }
-
 @Composable
 private fun LessonContent(
     data: LessonScreenData,
     onBackClick: () -> Unit,
+    onEnrollClick: (String) -> Unit,
     onLessonSelected: (String) -> Unit
 ) {
-    var selectedTab by remember { mutableStateOf(LessonTab.LESSONS) }
-
     Column(modifier = Modifier.fillMaxSize()) {
         VideoPlayerHeader(course = data.course, lesson = data.currentLesson, onBackClick = onBackClick)
 
@@ -104,14 +107,14 @@ private fun LessonContent(
                 color = DarkTealPrimary,
                 fontWeight = FontWeight.Bold
             )
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = data.currentLesson.title,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF1A1A1A)
             )
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = data.currentLesson.content,
                 style = MaterialTheme.typography.bodyMedium,
@@ -119,41 +122,37 @@ private fun LessonContent(
             )
         }
 
-        TabRow(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
-
-        when (selectedTab) {
-            LessonTab.LESSONS -> LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
-            ) {
-                items(data.course.lessons) { lesson ->
-                    val isCurrent = lesson.id == data.currentLesson.id
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(
-                                if (isCurrent) DarkTealPrimary.copy(alpha = 0.08f)
-                                else Color.Transparent
-                            )
-                    ) {
-                        if (isCurrent) {
-                            NowPlayingRow(lesson = lesson)
-                        } else {
-                            LessonListItem(
-                                lesson = lesson,
-                                index = data.course.lessons.indexOf(lesson),
-                                onClick = {
-                                    if (lesson.isFree || isAlreadyUnlockedByOrder(data.course, lesson)) {
-                                        onLessonSelected(lesson.id)
-                                    }
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
+        ) {
+            items(data.course.lessons) { lesson ->
+                val isCurrent = lesson.id == data.currentLesson.id
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            if (isCurrent) DarkTealPrimary.copy(alpha = 0.08f)
+                            else Color.Transparent
+                        )
+                ) {
+                    if (isCurrent) {
+                        NowPlayingRow(lesson = lesson)
+                    } else {
+                        LessonListItem(
+                            lesson = lesson,
+                            index = data.course.lessons.indexOf(lesson),
+                            onClick = {
+                                if (lesson.isFree || data.isUnlocked) {
+                                    onLessonSelected(lesson.id)
+                                } else {
+                                    onEnrollClick(data.course.id)
                                 }
-                            )
-                        }
+                            }
+                        )
                     }
                 }
             }
-            LessonTab.NOTES -> EmptyTabContent("Your notes for this lesson will show up here.")
-            LessonTab.RESOURCES -> EmptyTabContent("Downloadable resources for this lesson will show up here.")
         }
     }
 }
@@ -161,8 +160,6 @@ private fun LessonContent(
 // Mirrors the mock's behavior: free lessons are always tappable; locked ones
 // are visually locked. We don't gate on "already watched" since there's no
 // progress-tracking field in the API — only isFree distinguishes access.
-private fun isAlreadyUnlockedByOrder(course: Course, lesson: Lesson): Boolean = lesson.isFree
-
 @Composable
 private fun NowPlayingRow(lesson: Lesson) {
     Row(
@@ -184,7 +181,7 @@ private fun NowPlayingRow(lesson: Lesson) {
                 modifier = Modifier.size(18.dp)
             )
         }
-        androidx.compose.foundation.layout.Spacer(modifier = Modifier.size(width = 12.dp, height = 0.dp))
+        Spacer(modifier = Modifier.size(width = 12.dp, height = 0.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = lesson.title,
@@ -201,59 +198,7 @@ private fun NowPlayingRow(lesson: Lesson) {
     }
 }
 
-@Composable
-private fun EmptyTabContent(message: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color(0xFF8A8A8A),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
-    }
-}
 
-@Composable
-private fun TabRow(selectedTab: LessonTab, onTabSelected: (LessonTab) -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp),
-        horizontalArrangement = Arrangement.spacedBy(24.dp)
-    ) {
-        TabItem("Lessons", selectedTab == LessonTab.LESSONS) { onTabSelected(LessonTab.LESSONS) }
-        TabItem("Notes", selectedTab == LessonTab.NOTES) { onTabSelected(LessonTab.NOTES) }
-        TabItem("Resources", selectedTab == LessonTab.RESOURCES) { onTabSelected(LessonTab.RESOURCES) }
-    }
-}
-
-@Composable
-private fun TabItem(label: String, isSelected: Boolean, onClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .padding(vertical = 10.dp)
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            color = if (isSelected) Color(0xFF1A1A1A) else Color(0xFF8A8A8A)
-        )
-        androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(6.dp))
-        Box(
-            modifier = Modifier
-                .height(2.dp)
-                .background(if (isSelected) DarkTealPrimary else Color.Transparent)
-                .fillMaxWidth()
-        )
-    }
-}
 
 @Composable
 private fun VideoPlayerHeader(course: Course, lesson: Lesson, onBackClick: () -> Unit) {
@@ -261,8 +206,16 @@ private fun VideoPlayerHeader(course: Course, lesson: Lesson, onBackClick: () ->
     // player chrome (gradient, play/pause, scrubber) without wiring ExoPlayer
     // to a dead URL. Scrubbing is simulated locally for the UI demo.
     var isPlaying by remember(lesson.id) { mutableStateOf(true) }
-    var progress by remember(lesson.id) { mutableFloatStateOf(0.35f) }
+    var progress by remember(lesson.id) { mutableFloatStateOf(0.0f) }
     val totalSeconds = lesson.durationMinutes * 60
+
+    LaunchedEffect(isPlaying) {
+        while (isPlaying && progress < 1f) {
+            delay(1000)
+            progress += 1f / totalSeconds
+        }
+    }
+
     val currentSeconds = (progress * totalSeconds).toInt()
 
     Box(
@@ -278,11 +231,22 @@ private fun VideoPlayerHeader(course: Course, lesson: Lesson, onBackClick: () ->
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .statusBarsPadding()
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            CircleIconButton(icon = Icons.Filled.ArrowBack, onClick = onBackClick)
-            CircleIconButton(icon = Icons.Filled.Fullscreen, onClick = { /* fullscreen not in scope */ })
+            CircleIconButton(
+                icon = Icons.Filled.ArrowBack,
+                onClick = onBackClick,
+                containerColor = Color.White.copy(alpha = 0.2f),
+                contentColor = Color.White
+            )
+            CircleIconButton(
+                icon = Icons.Filled.Fullscreen,
+                onClick = { /* fullscreen not in scope */ },
+                containerColor = Color.White.copy(alpha = 0.2f),
+                contentColor = Color.White
+            )
         }
 
         Box(
@@ -304,18 +268,22 @@ private fun VideoPlayerHeader(course: Course, lesson: Lesson, onBackClick: () ->
         Column(
             modifier = Modifier
                 .align(Alignment.TopStart)
+                .statusBarsPadding()
                 .padding(start = 16.dp, top = 70.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .background(Color.White.copy(alpha = 0.15f))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-            ) {
-                Text(
-                    text = "// kotlin",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.White
-                )
+            val languageTag = course.tags.firstOrNull() ?: ""
+            if (languageTag.isNotBlank()) {
+                Box(
+                    modifier = Modifier
+                        .background(Color.White.copy(alpha = 0.15f))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "// ${languageTag.lowercase()}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White
+                    )
+                }
             }
         }
 
@@ -323,7 +291,7 @@ private fun VideoPlayerHeader(course: Course, lesson: Lesson, onBackClick: () ->
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(start = 16.dp, end = 16.dp, bottom = 24.dp)
         ) {
             Slider(
                 value = progress,
@@ -342,20 +310,6 @@ private fun VideoPlayerHeader(course: Course, lesson: Lesson, onBackClick: () ->
                 Text(formatTime(currentSeconds), style = MaterialTheme.typography.labelSmall, color = Color.White)
                 Text(formatTime(totalSeconds), style = MaterialTheme.typography.labelSmall, color = Color.White)
             }
-        }
-    }
-}
-
-@Composable
-private fun CircleIconButton(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .size(40.dp)
-            .background(Color.White.copy(alpha = 0.2f), CircleShape),
-        contentAlignment = Alignment.Center
-    ) {
-        IconButton(onClick = onClick) {
-            Icon(imageVector = icon, contentDescription = null, tint = Color.White)
         }
     }
 }

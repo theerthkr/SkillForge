@@ -9,6 +9,7 @@ import androidx.navigation.navArgument
 import com.theerthkr.skillforge.screens.CourseDetailScreen
 import com.theerthkr.skillforge.screens.HomeScreen
 import com.theerthkr.skillforge.screens.LessonScreen
+import com.theerthkr.skillforge.screens.PaymentScreen
 
 @Composable
 fun SkillforgeNavigation() {
@@ -34,6 +35,9 @@ fun SkillforgeNavigation() {
                 onLessonClick = { lessonId ->
                     navController.navigate("lesson/$courseId/$lessonId")
                 },
+                onEnrollClick = { id ->
+                    navController.navigate("payment/$id")
+                },
                 onBackClick = { navController.popBackStack() }
             )
         }
@@ -52,6 +56,18 @@ fun SkillforgeNavigation() {
             LessonScreen(
                 courseId = courseId,
                 lessonId = lessonId,
+                onBackClick = { navController.popBackStack() },
+                onEnrollClick = { id -> navController.navigate("payment/$id") }
+            )
+        }
+
+        composable(
+            route = "payment/{courseId}",
+            arguments = listOf(navArgument("courseId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
+            PaymentScreen(
+                courseId = courseId,
                 onBackClick = { navController.popBackStack() }
             )
         }

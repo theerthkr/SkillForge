@@ -1,16 +1,12 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    kotlin("plugin.serialization") version "2.2.10"
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
     namespace = "com.theerthkr.skillforge"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.theerthkr.skillforge"
@@ -70,6 +66,8 @@ dependencies {
 
     implementation("androidx.navigation:navigation-compose:2.8.5")
     testImplementation(libs.junit)
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)

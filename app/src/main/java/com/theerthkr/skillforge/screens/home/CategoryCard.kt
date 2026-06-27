@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -11,6 +12,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Web
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -35,9 +40,20 @@ fun CategoryCard(
             .getOrDefault(Color(0xFF2DD4BF))
     }
 
+    val icon = remember(category.name) {
+        when {
+            category.name.contains("Android", ignoreCase = true) -> Icons.Filled.PhoneAndroid
+            category.name.contains("Design", ignoreCase = true) -> Icons.Filled.Palette
+            category.name.contains("Backend", ignoreCase = true) -> Icons.Filled.Storage
+            category.name.contains("Web", ignoreCase = true) -> Icons.Filled.Web
+            else -> Icons.Filled.Code
+        }
+    }
+
     Card(
         modifier = modifier
             .width(150.dp)
+            .height(140.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -54,20 +70,20 @@ fun CategoryCard(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Code,
+                    imageVector = icon,
                     contentDescription = null,
                     tint = accentColor,
                     modifier = Modifier.size(20.dp)
                 )
             }
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = category.name,
                 style = MaterialTheme.typography.titleSmall,
                 color = Color(0xFF1A1A1A),
                 maxLines = 2
             )
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "${category.courseCount} courses",
                 style = MaterialTheme.typography.bodySmall,
