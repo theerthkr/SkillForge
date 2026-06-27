@@ -49,7 +49,7 @@ class SkillforgeRepository(
                 cachedCategories = cached.categories
                 cached.categories
             } else {
-                emptyList()
+                throw e
             }
         }
     }

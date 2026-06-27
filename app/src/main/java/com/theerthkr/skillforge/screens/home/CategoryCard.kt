@@ -32,6 +32,7 @@ import com.theerthkr.skillforge.data.model.Category
 @Composable
 fun CategoryCard(
     category: Category,
+    isSelected: Boolean = false,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -56,7 +57,8 @@ fun CategoryCard(
             .height(140.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = if (isSelected) accentColor.copy(alpha = 0.05f) else Color.White),
+        border = if (isSelected) androidx.compose.foundation.BorderStroke(2.dp, accentColor) else null,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
