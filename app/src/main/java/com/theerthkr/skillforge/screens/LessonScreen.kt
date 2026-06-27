@@ -14,9 +14,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Fullscreen
@@ -37,6 +43,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import kotlinx.coroutines.delay
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -47,6 +56,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.theerthkr.skillforge.data.model.Course
 import com.theerthkr.skillforge.data.model.Lesson
+import com.theerthkr.skillforge.data.repository.SkillforgeRepository
 import com.theerthkr.skillforge.screens.coursedetail.LessonListItem
 import com.theerthkr.skillforge.ui.theme.CreamBackground
 import com.theerthkr.skillforge.ui.theme.DarkTealPrimary
@@ -90,6 +100,10 @@ fun LessonScreen(
     }
 }
 
+enum class LessonTab {
+    LESSONS, NOTES, RESOURCES
+}
+
 @Composable
 private fun LessonContent(
     data: LessonScreenData,
@@ -97,10 +111,20 @@ private fun LessonContent(
     onEnrollClick: (String) -> Unit,
     onLessonSelected: (String) -> Unit
 ) {
+    var selectedTab by remember { mutableStateOf(LessonTab.LESSONS) }
+    val repository = remember { SkillforgeRepository.instance }
+    var noteText by remember(data.currentLesson.id) {
+        mutableStateOf(repository.getNote(data.course.id, data.currentLesson.id))
+    }
+
+    val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Column(modifier = Modifier.fillMaxSize()) {
         VideoPlayerHeader(course = data.course, lesson = data.currentLesson, onBackClick = onBackClick)
 
-        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) {
             Text(
                 text = "LESSON ${data.course.lessons.indexOfFirst { it.id == data.currentLesson.id } + 1} · ${data.course.title.uppercase()}",
                 style = MaterialTheme.typography.labelMedium,
@@ -122,33 +146,133 @@ private fun LessonContent(
             )
         }
 
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
+        // Horizontal Tabs Toggle
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            items(data.course.lessons) { lesson ->
-                val isCurrent = lesson.id == data.currentLesson.id
-                Box(
+            LessonTab.values().forEach { tab ->
+                val isSelected = tab == selectedTab
+                val label = when (tab) {
+                    LessonTab.LESSONS -> "Lessons"
+                    LessonTab.NOTES -> "Notes"
+                    LessonTab.RESOURCES -> "Resources"
+                }
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            if (isCurrent) DarkTealPrimary.copy(alpha = 0.08f)
-                            else Color.Transparent
-                        )
+                        .clickable { selectedTab = tab }
+                        .padding(vertical = 4.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    if (isCurrent) {
-                        NowPlayingRow(lesson = lesson)
-                    } else {
-                        LessonListItem(
-                            lesson = lesson,
-                            index = data.course.lessons.indexOf(lesson),
-                            onClick = {
-                                if (lesson.isFree || data.isUnlocked) {
-                                    onLessonSelected(lesson.id)
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) DarkTealPrimary else Color(0xFF8A8A8A)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Box(
+                        modifier = Modifier
+                            .height(2.dp)
+                            .width(40.dp)
+                            .background(if (isSelected) DarkTealPrimary else Color.Transparent)
+                    )
+                }
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            when (selectedTab) {
+                LessonTab.LESSONS -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
+                    ) {
+                        items(data.course.lessons) { lesson ->
+                            val isCurrent = lesson.id == data.currentLesson.id
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(
+                                        if (isCurrent) DarkTealPrimary.copy(alpha = 0.08f)
+                                        else Color.Transparent
+                                    )
+                            ) {
+                                if (isCurrent) {
+                                    NowPlayingRow(lesson = lesson)
                                 } else {
-                                    onEnrollClick(data.course.id)
+                                    LessonListItem(
+                                        lesson = lesson,
+                                        index = data.course.lessons.indexOf(lesson),
+                                        onClick = {
+                                            if (lesson.isFree || data.isUnlocked) {
+                                                onLessonSelected(lesson.id)
+                                            } else {
+                                                onEnrollClick(data.course.id)
+                                            }
+                                        }
+                                    )
                                 }
                             }
+                        }
+                    }
+                }
+                LessonTab.NOTES -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 20.dp, vertical = 8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = noteText,
+                            onValueChange = { noteText = it },
+                            placeholder = { Text("Write your notes here...", color = Color(0xFFB0B0B0)) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                                focusedBorderColor = DarkTealPrimary,
+                                unfocusedBorderColor = Color(0xFFDCDCDC),
+                                focusedLabelColor = DarkTealPrimary
+                            )
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(
+                            onClick = {
+                                repository.saveNote(data.course.id, data.currentLesson.id, noteText)
+                                focusManager.clearFocus()
+                                keyboardController?.hide()
+                                android.widget.Toast.makeText(context, "Note saved!", android.widget.Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.align(Alignment.End),
+                            colors = ButtonDefaults.buttonColors(containerColor = DarkTealPrimary),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("Save Note", fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
+                LessonTab.RESOURCES -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No resources for this course yet.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFF8A8A8A)
                         )
                     }
                 }
