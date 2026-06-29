@@ -56,14 +56,34 @@ Rather than relying on a single AI assistant, I ran a distributed, multi-model w
 
 ### Actual Prompts I Sent
 
-**Prompt 1 — Fixing the API integration:**
-> *"TODO: add prompt"*
+**Prompts I used to get started**
+> I am building an Android app in Kotlin. I need to fetch data from this URL: https://raw.githubusercontent.com/android-assesment/notes/refs/heads/main/data.json.The JSON structure is attached . Generate the necessary Retrofit interface, the Data Classes (using Kotlinx Serialization or Moshi), and a simple Repository class that uses Coroutines to fetch this data and returns a Kotlin Result or sealed class for Success/Error/Loading states.
 
-**Prompt 2 — Payment flow and lesson unlock:**
-> *"TODO: add prompt"*
+> I am using Jetpack Compose. Write the code to define a custom Typography object using the 'Plus Jakarta Sans' font family for all text styles. Then, update my Theme.kt to enforce a strict Light Theme (no dark mode). Use a cream color (suggest a hex code) for the background, a dark teal for the primary color, and a lighter teal for secondary elements
 
-**Prompt 3 — Offline caching:**
-> *"TODO: add prompt"*
+> Write a Jetpack Compose screen called HomeScreen. It takes a UiState (Loading, Error, Success). In the Success state, it receives a list of Category objects.
+Visual layout:
+A top greeting text 'Welcome back' and a bold header 'Find your next skill'.
+A search bar with a magnifying glass icon.
+A 'Categories' section with a horizontally scrolling row of cards.
+A 'Popular courses' section with a vertically scrolling list of cards.
+For images, use the Coil library's AsyncImage.
+Please write clean, modular Compose functions for the individual cards (e.g., CourseCard, CategoryCard) rather than putting everything in one massive function.
+
+**Some of the prompta that I used to improve ui**
+> I need to refactor the current Jetpack Compose lesson screen to match a new design reference.
+Primary Goal: Integrate the 'Now Playing' state directly into the standard lesson list cards rather than keeping it as an isolated component. The core container structure must remain identical across all states.
+Specific UI Requirements:
+Component Spacing: Introduce clean, uniform spacing between all lesson cards in the list.
+Navigation Tab States: Update the click behavior. The active tab text should shift to black, but the underline indicator must remain the existing primary teal color.
+Active Video State: When a video is selected, modify the interior styling of that specific card (text color, icon swap, background tint) to reflect the active state, without altering the outer bounding box structure.
+
+> I need to overhaul the CategoryCard composable to replace the standard Material icons with a custom abstract 'box-in-box' design.
+Design Specifications:
+Outer Container: A large, squarish bounding box with 20dp rounded corners and a subtle 1dp #E0E0E0 border.
+Inner Container (The 'Icon'): Create a nested Box layout. The outer bounding box should use the category's accent color but with an 18% alpha transparency. Centered inside this, place a smaller Box using the same accent color at 100% opacity.
+Content Preservation: Ensure the 'Category Name' and 'Course Count' text elements remain perfectly intact and properly padded below the new visual element.
+
 
 ### What the AI Got Right
 
