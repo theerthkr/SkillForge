@@ -12,30 +12,30 @@ The API returns a nested structure — `categories → courses → lessons` — 
 
 ---
 
-## Tech Stack
+## Design → Build
 
-| Layer | Technology |
-|---|---|
-| Language | Kotlin |
-| UI | Jetpack Compose |
-| Architecture | MVVM (ViewModel + StateFlow) |
-| Networking | Retrofit 2 |
-| JSON Parsing | kotlinx.serialization |
-| Image Loading | Coil |
-| Navigation | Jetpack Navigation Compose |
-| Persistence | SharedPreferences (unlock state + notes), Internal File Storage (catalog cache) |
-| Testing | JUnit 4, Kotlin Coroutines Test, AndroidX Instrumented Tests |
-
----
-
-## Features
-
-- **Home Screen** — Category filter cards + course grid with thumbnail, level, title, instructor, and rating. Full-text search across title, instructor, and level.
-- **Course Detail** — Hero image, instructor card, scrollable lesson list with Free/Locked badges. Sticky CTA footer: *Start Learning* (if any lesson is free) or *Enrol Now* (if all are paid). Footer disappears once the course is purchased.
-- **Lesson Player** — Simulated video player (play/pause, scrubber, time display) with three tabs: Lessons, Notes (per-lesson, persisted to SharedPreferences), and Resources.
-- **Payment Screen** — Mock checkout with real input validation: card number auto-spaced via `VisualTransformation`, expiry auto-formatted as MM/YY, CVV capped at 4 digits. On successful payment, the course unlocks and persists across restarts.
-- **Offline Cache** — On first launch, the full JSON is written to `filesDir/catalog_cache.json`. If the device is offline on subsequent launches, the app reads the cache instantly instead of showing an error. The cache is silently refreshed whenever connectivity is available.
-- **Loading + Error States** — Every screen handles both.
+<table>
+<tr>
+<th width="280">Design (given)</th>
+<th width="40"></th>
+<th width="280">Built</th>
+</tr>
+<tr>
+<td><img src="images/design-home.png" width="260"/></td>
+<td align="center">➡️</td>
+<td><img src="images/built-home.jpeg" width="260"/></td>
+</tr>
+<tr>
+<td><img src="images/design-course-detail.png" width="260"/></td>
+<td align="center">➡️</td>
+<td><img src="images/built-course-detail.jpeg" width="260"/></td>
+</tr>
+<tr>
+<td><img src="images/design-lesson.png" width="260"/></td>
+<td align="center">➡️</td>
+<td><img src="images/built-lesson.jpeg" width="260"/></td>
+</tr>
+</table>
 
 ---
 
@@ -54,60 +54,30 @@ Rather than relying on a single AI assistant, I ran a distributed, multi-model w
 | Verification & Git push | OpenCode | GPT OSS 120B (via OpenRouter) | Final code review pass, catching any remaining issues, then pushing the finished code to GitHub |
 | Prompt input | Wispr Flow | — | Voice dictation → structured prompts, used across all of the above |
 
-### Git Hygiene Convention
-
-One deliberate workflow rule I kept throughout: **AI only pushes to the `main` branch, never directly to `master`**. The repo's default branch is `master`, so this separation created a natural checkpoint — AI-generated commits land on `main`, I review the diff manually, and only then merge into `master`. It kept me in control of what actually shipped without slowing down the AI-assisted iteration loop.
-
----
-
 ### Actual Prompts I Sent
 
 **Prompt 1 — Fixing the API integration:**
-> *"I don't think the API implementation is complete or correct. The JSON file fetched through the API contains multiple courses that are not available in the app, while the app includes courses missing from the API JSON. Here is the GitHub link again: `https://raw.githubusercontent.com/android-assesment/notes/refs/heads/main/data.json`. Please reconnect the API using Retrofit and kotlinx-serialization, update the implementation, and remove any posts that are not present in the API JSON."*
+> *"TODO: add prompt"*
 
 **Prompt 2 — Payment flow and lesson unlock:**
-> *"The payment transfer page is not working on the second page. It still plays the locked paid video on the third page. Also fix on the second page so that if the user clicks on the paid item, it takes them to the paid page. Add validation to the payments page, and if the payment is completed, make sure the locked video opens."*
+> *"TODO: add prompt"*
 
 **Prompt 3 — Offline caching:**
-> *"I want the app to work when it is first launched by the user. It should fetch data from the API and save it into the app's cache. If the user launches the app offline, it doesn't need to go online just to fetch the videos. If there is an update in the JSON API key that we are fetching from, the update should reflect in the app."*
-
----
+> *"TODO: add prompt"*
 
 ### What the AI Got Right
 
-The **offline caching architecture** was implemented correctly on the first attempt. The model understood immediately that we needed to: serialise the full API response with `kotlinx.serialization`, write it to `context.filesDir`, and fall back to that file on any network failure — all without restructuring the existing ViewModel layer. It was a non-trivial bit of state coordination and it landed cleanly.
-
----
+The **offline caching architecture** was implemented correctly on the first attempt. The model understood immediately that we needed to serialise the full API response with `kotlinx.serialization`, write it to `context.filesDir`, and fall back to that file on any network failure — all without restructuring the existing ViewModel layer.
 
 ### What the AI Got Wrong — and How I Fixed It
 
-The AI initially hardcoded `course.price() == 0.0` as the check for whether a course was free. This meant **every course appeared unlocked** regardless of what the API actually said, which silently broke the entire payment flow — lessons that should've been locked were just playing freely.
+The AI initially hardcoded `course.price() == 0.0` as the check for whether a course was free. This meant **every course appeared unlocked**, regardless of what the API actually said, which silently broke the payment flow.
 
-The fix: classify courses based purely on the `isFree` field on individual lessons, which is what the API actually provides. Once I pointed that out explicitly in the prompt, the model corrected it cleanly. The lesson here is that AI tends to fill in gaps with plausible-sounding defaults rather than stopping to ask — so you have to actively test the edge cases yourself rather than assuming the happy path works.
+The fix: classify courses based purely on the `isFree` field on individual lessons, which is what the API actually provides. Once I pointed that out explicitly, the model corrected it cleanly.
 
----
+### What AI Couldn't Do
 
-## Project Structure
-
-```
-app/src/main/java/com/theerthkr/skillforge/
-├── data/
-│   ├── model/          # SkillforgeModels.kt (Category, Course, Lesson, Instructor)
-│   ├── remote/         # SkillforgeApi.kt, NetworkModule.kt
-│   └── repository/     # SkillforgeRepository.kt (caching, unlock, notes)
-├── navigation/         # SkillforgeNavigation.kt
-├── screens/
-│   ├── home/           # CategoryCard.kt, CourseCard.kt
-│   ├── coursedetail/   # LessonListItem.kt
-│   ├── HomeScreen.kt
-│   ├── CourseDetailScreen.kt
-│   ├── LessonScreen.kt
-│   └── PaymentScreen.kt
-├── ui/theme/           # Color.kt, Type.kt, Theme.kt
-├── viewmodel/          # HomeViewModel, CourseDetailViewModel, LessonViewModel
-├── SkillforgeApplication.kt
-└── MainActivity.kt
-```
+Matching the UI **exactly** to the given design — spacing, padding, the small subtle stuff — wasn't something AI could really do on its own. It can't see what's actually being rendered on screen, so when I asked it to fix specific layout details, it was mostly guessing: it would shift one thing and break another, or "fix" a padding value that didn't even need fixing. After a few rounds of that going nowhere, I just did the pixel-level matching myself — comparing the design screenshots against the running app side by side and adjusting spacing/padding manually until it matched.
 
 ---
 
