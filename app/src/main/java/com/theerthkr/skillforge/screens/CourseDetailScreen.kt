@@ -1,5 +1,8 @@
 package com.theerthkr.skillforge.screens
 
+import androidx.compose.foundation.BorderStroke
+import com.theerthkr.skillforge.R
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -26,6 +30,7 @@ import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
@@ -53,6 +59,8 @@ import com.theerthkr.skillforge.ui.theme.DarkTealPrimary
 import com.theerthkr.skillforge.viewmodel.CourseDetailScreenData
 import com.theerthkr.skillforge.viewmodel.CourseDetailViewModel
 import com.theerthkr.skillforge.viewmodel.UiState
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
 fun CourseDetailScreen(
@@ -101,12 +109,13 @@ private fun CourseDetailContent(
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 96.dp)
+            contentPadding = PaddingValues(bottom = 96.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item { HeroSection(course = course, onBackClick = onBackClick) }
             item {
                 Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
                     Text(
                         text = course.title,
                         style = MaterialTheme.typography.headlineSmall,
@@ -131,11 +140,14 @@ private fun CourseDetailContent(
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("${course.rating}", style = MaterialTheme.typography.labelLarge, color = Color(0xFF1A1A1A))
                         Spacer(modifier = Modifier.width(12.dp))
+                        // Student Count
                         Text(
                             text = formatStudentCount(course.studentsEnrolled),
                             style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold, // Added this line
                             color = Color(0xFF8A8A8A)
                         )
+
                         Spacer(modifier = Modifier.width(12.dp))
                         Icon(
                             imageVector = Icons.Filled.Schedule,
@@ -144,9 +156,12 @@ private fun CourseDetailContent(
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
+
+// Duration
                         Text(
                             text = formatDuration(course.durationHours),
                             style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold, // Added this line
                             color = Color(0xFF8A8A8A)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
@@ -161,10 +176,12 @@ private fun CourseDetailContent(
                     Spacer(modifier = Modifier.height(16.dp))
                     InstructorCard(course = course)
 
+
                     Spacer(modifier = Modifier.height(16.dp))
+
                     Text(
                         text = course.description,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyLarge, // Upgraded from bodyMedium
                         color = Color(0xFF4A4A4A)
                     )
 
@@ -189,14 +206,15 @@ private fun CourseDetailContent(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
+
             itemsIndexed(course.lessons) { index, lesson ->
                 Box(modifier = Modifier.padding(horizontal = 20.dp)) {
                     LessonListItem(
                         lesson = lesson,
                         index = index,
-                        onClick = { 
+                        onClick = {
                             if (lesson.isFree || data.isUnlocked) {
-                                onLessonClick(lesson.id) 
+                                onLessonClick(lesson.id)
                             } else {
                                 onEnrollClick(course.id)
                             }
@@ -226,86 +244,115 @@ private fun CourseDetailContent(
 
 
 private fun formatStudentCount(count: Int): String {
-    return if (count >= 1000) {
-        val thousands = count / 1000.0
-        "${if (thousands == thousands.toLong().toDouble()) thousands.toLong().toString() else String.format("%.1f", thousands)}k"
-    } else {
-        count.toString()
-    }
+    val formatter = NumberFormat.getNumberInstance(Locale.getDefault())
+    return formatter.format(count)
 }
-
 @Composable
 private fun HeroSection(course: Course, onBackClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(220.dp)
+            .height(260.dp)
     ) {
-        AsyncImage(
-            model = course.thumbnailUrl,
+        // 1. Your Background Image
+        Image(
+            painter = painterResource(id = R.drawable.hero),
             contentDescription = course.title,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
+
+        // 2. The Gradient Merge Overlay
         Box(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .height(100.dp) // Height of the fade effect
+                .align(Alignment.BottomCenter)
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, CreamBackground)
+                        colors = listOf(Color.Transparent, CreamBackground) // Fades into the background color
                     )
                 )
         )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            CircleIconButton(icon = Icons.Filled.ArrowBack, onClick = onBackClick)
-            CircleIconButton(icon = Icons.Filled.BookmarkBorder, onClick = { /* bookmarking not in scope */ })
+        // Top Bar (Back, Bookmark, and small tag)
+        Column(modifier = Modifier.padding(16.dp).statusBarsPadding()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                CircleIconButton(icon = Icons.Filled.ArrowBack, onClick = onBackClick)
+                CircleIconButton(icon = Icons.Filled.BookmarkBorder, onClick = {})
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            // The top left '// kotlin' tag
+            Surface(
+                color = MaterialTheme.colorScheme.secondary, // Theme color!
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = "//  kotlin",
+                    style = MaterialTheme.typography.labelSmall, // Smaller font
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+            }
         }
 
-        Column(
+        // Large White Title inside the Hero
+        Text(
+            text = "Kotlin\nFundamentals",
+            style = MaterialTheme.typography.displaySmall,
+            color = Color.White,
+            fontWeight = FontWeight.ExtraBold,
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(start = 16.dp, end = 16.dp, bottom = 48.dp)
+                .padding(start = 16.dp, top = 16.dp, end = 0.dp, bottom = 40.dp )
+        )
+
+        // Pill Tags shifted down over the edge
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 16.dp)
+                .offset(y = 16.dp), // Pushes tags over the boundary edge
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                course.tags.forEach { tag ->
-                    Surface(
-                        color = Color.White.copy(alpha = 0.85f),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = tag,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = DarkTealPrimary,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                        )
-                    }
+            listOf("Kotlin", "Basics", "JVM").forEach { tag ->
+                Surface(
+                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, Color(0xFFE0E0E0))
+                ) {
+                    Text(
+                        text = tag,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelSmall
+                    )
                 }
             }
         }
+
+        // Add your SVG Vector image of the wave here, aligned to BottomCenter!
     }
 }
-
 @Composable
 private fun InstructorCard(course: Course) {
     val instructor = course.instructor
     Surface(
         color = Color.White,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, Color(0xFFE0E0E0)), // Subtle gray outline
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(16.dp), // Good internal padding
             verticalAlignment = Alignment.CenterVertically
-        ) {
+        ){
             Box(
                 modifier = Modifier
                     .size(44.dp)
@@ -320,25 +367,20 @@ private fun InstructorCard(course: Course) {
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize().clip(CircleShape)
                     )
-                } else {
-                    Text(
-                        text = instructor?.name?.take(2)?.uppercase() ?: "",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
                 }
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = instructor?.name ?: "",
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleMedium, // Upgraded from titleSmall
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF1A1A1A)
                 )
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = instructor?.title ?: "",
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium, // Upgraded from bodySmall
                     color = Color(0xFF8A8A8A)
                 )
             }
@@ -359,38 +401,49 @@ private fun PriceFooter(isFree: Boolean, onEnrollClick: () -> Unit, modifier: Mo
         color = CreamBackground,
         modifier = modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(
-                    text = "PRICE",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF8A8A8A)
-                )
-                Text(
-                    text = if (isFree) "Free" else "Paid",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = DarkTealPrimary
-                )
-            }
-            Button(
-                onClick = onEnrollClick,
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = DarkTealPrimary),
-                modifier = Modifier.height(52.dp)
+        // 1. We wrap EVERYTHING in this outer Column
+        Column(modifier = Modifier.fillMaxWidth()) {
+
+            // 2. The divider sits right at the top, spanning the full width
+            HorizontalDivider(thickness = 1.dp, color = Color(0xFFE0E0E0))
+
+            // 3. The Row contains the text and button, placed below the divider
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Enroll now",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 24.dp)
-                )
+                // The inner text column (Notice the divider is gone from here!)
+                Column(modifier = Modifier.padding(end = 24.dp)) {
+                    Text(
+                        text = "PRICE",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFF8A8A8A)
+                    )
+                    Text(
+                        text = if (isFree) "Free" else "Paid",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = DarkTealPrimary
+                    )
+                }
+
+                // Your massive Enroll Button
+                Button(
+                    onClick = onEnrollClick,
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = DarkTealPrimary),
+                    modifier = Modifier
+                        .weight(1f) // Now this works perfectly again!
+                        .height(56.dp)
+                ) {
+                    Text(
+                        text = "Enroll now",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }

@@ -131,14 +131,14 @@ private fun LessonContent(
                 color = DarkTealPrimary,
                 fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = data.currentLesson.title,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF1A1A1A)
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = data.currentLesson.content,
                 style = MaterialTheme.typography.bodyMedium,
@@ -170,7 +170,8 @@ private fun LessonContent(
                         text = label,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isSelected) DarkTealPrimary else Color(0xFF8A8A8A)
+                        // The text now turns black when selected, gray when unselected
+                        color = if (isSelected) Color(0xFF1A1A1A) else Color(0xFF8A8A8A)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Box(
@@ -192,34 +193,26 @@ private fun LessonContent(
                 LessonTab.LESSONS -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
+                        // Added bottom padding and spacedBy for consistent gaps
+                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 24.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+                        // Note: use itemsIndexed to get the index if you need it for numbering
                         items(data.course.lessons) { lesson ->
                             val isCurrent = lesson.id == data.currentLesson.id
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(
-                                        if (isCurrent) DarkTealPrimary.copy(alpha = 0.08f)
-                                        else Color.Transparent
-                                    )
-                            ) {
-                                if (isCurrent) {
-                                    NowPlayingRow(lesson = lesson)
-                                } else {
-                                    LessonListItem(
-                                        lesson = lesson,
-                                        index = data.course.lessons.indexOf(lesson),
-                                        onClick = {
-                                            if (lesson.isFree || data.isUnlocked) {
-                                                onLessonSelected(lesson.id)
-                                            } else {
-                                                onEnrollClick(data.course.id)
-                                            }
-                                        }
-                                    )
+
+                            LessonListItem(
+                                lesson = lesson,
+                                index = data.course.lessons.indexOf(lesson),
+                                isCurrent = isCurrent, // Pass the new state here
+                                onClick = {
+                                    if (lesson.isFree || data.isUnlocked) {
+                                        onLessonSelected(lesson.id)
+                                    } else {
+                                        onEnrollClick(data.course.id)
+                                    }
                                 }
-                            }
+                            )
                         }
                     }
                 }
@@ -389,27 +382,7 @@ private fun VideoPlayerHeader(course: Course, lesson: Lesson, onBackClick: () ->
             )
         }
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .statusBarsPadding()
-                .padding(start = 16.dp, top = 70.dp)
-        ) {
-            val languageTag = course.tags.firstOrNull() ?: ""
-            if (languageTag.isNotBlank()) {
-                Box(
-                    modifier = Modifier
-                        .background(Color.White.copy(alpha = 0.15f))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        text = "// ${languageTag.lowercase()}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White
-                    )
-                }
-            }
-        }
+
 
         Column(
             modifier = Modifier

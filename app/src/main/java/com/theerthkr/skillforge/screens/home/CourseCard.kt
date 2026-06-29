@@ -1,5 +1,6 @@
 package com.theerthkr.skillforge.screens.home
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -52,15 +53,17 @@ fun CourseCard(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, Color(0xFFE0E0E0)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(16.dp), // Increased from 12.dp for a taller card
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(64.dp)
+                    .width(100.dp) // Wider
+                    .height(80.dp) // Shorter
                     .clip(RoundedCornerShape(14.dp))
                     .background(DarkTealPrimary.copy(alpha = 0.15f))
             ) {
@@ -77,7 +80,7 @@ fun CourseCard(
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = course.level.uppercase(),
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.labelMedium,
                     color = levelColor,
                     fontWeight = FontWeight.Bold
                 )
@@ -85,13 +88,14 @@ fun CourseCard(
                 Text(
                     text = course.title,
                     style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
                     color = Color(0xFF1A1A1A),
                     maxLines = 1
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = course.instructor?.name ?: "",
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = Color(0xFF8A8A8A)
                 )
                 Spacer(modifier = Modifier.height(6.dp))
@@ -106,7 +110,8 @@ fun CourseCard(
                     Text(
                         text = "${course.rating}",
                         style = MaterialTheme.typography.labelMedium,
-                        color = Color(0xFF1A1A1A)
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF8A8A8A)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Icon(
@@ -119,6 +124,7 @@ fun CourseCard(
                     Text(
                         text = formatDuration(course.durationHours),
                         style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
                         color = Color(0xFF8A8A8A)
                     )
                 }

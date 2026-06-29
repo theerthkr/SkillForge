@@ -1,5 +1,6 @@
 package com.theerthkr.skillforge.screens.home
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -10,15 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.PhoneAndroid
-import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.Web
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.theerthkr.skillforge.data.model.Category
 
@@ -41,54 +36,53 @@ fun CategoryCard(
             .getOrDefault(Color(0xFF2DD4BF))
     }
 
-    val icon = remember(category.name) {
-        when {
-            category.name.contains("Android", ignoreCase = true) -> Icons.Filled.PhoneAndroid
-            category.name.contains("Design", ignoreCase = true) -> Icons.Filled.Palette
-            category.name.contains("Backend", ignoreCase = true) -> Icons.Filled.Storage
-            category.name.contains("Web", ignoreCase = true) -> Icons.Filled.Web
-            else -> Icons.Filled.Code
-        }
-    }
-
     Card(
         modifier = modifier
-            .width(150.dp)
-            .height(140.dp)
+            .width(170.dp)
+            .height(160.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = if (isSelected) accentColor.copy(alpha = 0.05f) else Color.White),
-        border = if (isSelected) androidx.compose.foundation.BorderStroke(2.dp, accentColor) else null,
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        // Added the subtle border you asked for
+        border = BorderStroke(1.dp, Color(0xFFE0E0E0)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // The Box-in-Box design
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(48.dp) // The outer semi-transparent box
                     .background(
                         color = accentColor.copy(alpha = 0.18f),
                         shape = RoundedCornerShape(12.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = accentColor,
-                    modifier = Modifier.size(20.dp)
+                // The inner solid box
+                Box(
+                    modifier = Modifier
+                        .size(22.dp) // Smaller inner box, completely opaque
+                        .background(
+                            color = accentColor,
+                            shape = RoundedCornerShape(6.dp)
+                        )
                 )
             }
-            Spacer(modifier = Modifier.height(12.dp))
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // The text is back exactly as it was!
             Text(
                 text = category.name,
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
                 color = Color(0xFF1A1A1A),
                 maxLines = 2
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "${category.courseCount} courses",
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = Color(0xFF8A8A8A)
             )
         }

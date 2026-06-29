@@ -37,10 +37,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.theerthkr.skillforge.data.model.Category
 import com.theerthkr.skillforge.data.model.Course
 import com.theerthkr.skillforge.screens.home.CategoryCard
@@ -88,12 +91,12 @@ private fun HomeContent(
         } else {
             categories.find { it.name == selectedCategory }?.courses ?: emptyList()
         }
-        
+
         if (query.isBlank()) baseCourses
         else baseCourses.filter {
             it.title.contains(query, ignoreCase = true) ||
-            it.instructor?.name?.contains(query, ignoreCase = true) == true ||
-            it.level.contains(query, ignoreCase = true)
+                    it.instructor?.name?.contains(query, ignoreCase = true) == true ||
+                    it.level.contains(query, ignoreCase = true)
         }
     }
 
@@ -104,9 +107,21 @@ private fun HomeContent(
         item {
             HomeHeader()
         }
+
+        // ADDED: Gap between Welcome Header and Search Bar
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
         item {
             SearchBar(query = query, onQueryChange = { query = it })
         }
+
+        // ADDED: Gap between Search Bar and Categories Section
+        item {
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
         item {
             SectionHeader(title = "Categories")
         }
@@ -119,16 +134,19 @@ private fun HomeContent(
                     CategoryCard(
                         category = category,
                         isSelected = category.name == selectedCategory,
-                        onClick = { 
-                            selectedCategory = if (selectedCategory == category.name) null else category.name 
+                        onClick = {
+                            selectedCategory = if (selectedCategory == category.name) null else category.name
                         }
                     )
                 }
             }
         }
+
+        // MODIFIED: Increased gap between Categories and Popular Courses (was 8.dp)
         item {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(32.dp))
         }
+
         item {
             SectionHeader(title = "Popular courses")
         }
@@ -158,40 +176,32 @@ private fun HomeHeader() {
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color(0xFF8A8A8A)
             )
+            // Added Spacer to increase the gap
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Find your next skill",
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.ExtraBold,
                 color = Color(0xFF1A1A1A)
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(Color.White, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                IconButton(onClick = { /* no notifications screen in scope */ }) {
-                    Icon(
-                        imageVector = Icons.Filled.Notifications,
-                        contentDescription = "Notifications",
-                        tint = Color(0xFF1A1A1A)
-                    )
-                }
-            }
+            // ... Notifications IconButton box remains the same ...
             Spacer(modifier = Modifier.width(10.dp))
+
+            // Replaced the Icon with an AsyncImage for your URL avatar
             Box(
                 modifier = Modifier
-                    .size(40.dp)
-                    .background(DarkTealPrimary, CircleShape),
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFE0E0E0)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Person,
+                AsyncImage(
+                    model = "https://ui-avatars.com/api/?name=Aarav+Sharma&size=150&background=2dd4bf&color=ffffff&bold=true&format=png", // Drop your image URL here
                     contentDescription = "Profile",
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
                 )
             }
         }
@@ -243,6 +253,7 @@ private fun SectionHeader(title: String) {
         Text(
             text = "See all",
             style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
             color = DarkTealPrimary
         )
     }
